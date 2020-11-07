@@ -17,6 +17,14 @@ rex = {
     "address": address_re
 }
 
+examples = {
+    "first_name": "Camille",
+    "last_name": "Dupont",
+    "birth_date": "01/01/1970",
+    "birth_city": "Paris",
+    "address": "999 avenue de France, 75001 Paris"
+}
+
 
 def check_date(date) -> bool:
     try:
@@ -31,7 +39,8 @@ def edit(update: Update, context: CallbackContext, data_edit: str):
     name = data_edit.replace("edit_", "")
     if not rex[name].fullmatch(update.message.text) or\
             (name == "birth_date" and not check_date(update.message.text)):
-        context.bot.send_message(chat_id=update.effective_chat.id, text=f"Invalid value for `{local[name]}` \!",
+        context.bot.send_message(chat_id=update.effective_chat.id, text=f"Invalid value for `{local[name]}` \!\n"
+                                                                        f"*Example*: `{examples[name]}`",
                                  parse_mode=ParseMode.MARKDOWN_V2)
     else:
         s = db.Session()

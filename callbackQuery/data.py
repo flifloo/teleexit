@@ -11,6 +11,7 @@ def data(update: Update, context: CallbackContext):
         u = db.User(update["_effective_user"]["id"])
         s.add(u)
         s.commit()
+        u = s.query(db.User).get(update["_effective_user"]["id"])
     s.close()
     context.bot.send_message(chat_id=update.effective_chat.id,
                              text=f"*Firstname*: `{u.first_name}`\n"

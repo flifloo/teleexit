@@ -4,7 +4,6 @@ cffi==1.14.3
 cryptography==3.2.1
 decorator==4.4.2
 Pillow==8.0.1
-pkg-resources==0.0.0
 pycparser==2.20
 PyPDF2==1.26.0
 python-telegram-bot==13.0
