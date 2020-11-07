@@ -103,5 +103,5 @@ def create(update: Update, context: CallbackContext):
     output.write(output_stream)
     output_stream.seek(0)
     context.bot.send_document(chat_id=update.effective_chat.id, document=output_stream,
-                              reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Home", callback_data="home")],
-                                                                 [InlineKeyboardButton("New", callback_data="new")]]))
+                              reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🏘 Home", callback_data="home")],
+                                                                 [InlineKeyboardButton("📝 New", callback_data="new")]]))

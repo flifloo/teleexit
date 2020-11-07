@@ -30,5 +30,5 @@ def data(update: Update, context: CallbackContext):
                                                                                       callback_data="edit_birth_city")],
                                                                 [InlineKeyboardButton("Address",
                                                                                       callback_data="edit_address")],
-                                                                [InlineKeyboardButton("Home",
+                                                                [InlineKeyboardButton("🏘 Home",
                                                                                       callback_data="home")]]))
