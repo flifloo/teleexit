@@ -10,6 +10,7 @@ local = {"first_name": "Firstname",
          "address": "Address"}
 database = {}
 messages = {}
+reasons = {}
 
 logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
 

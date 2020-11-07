@@ -11,5 +11,5 @@ def edit(update: Update, context: CallbackContext):
     if update.effective_chat.id not in messages:
         messages[update.effective_chat.id] = {}
 
-    messages[update.effective_chat.id] = {update["_effective_user"]["id"]: update.callback_query.data}
+    messages[update.effective_chat.id][update["_effective_user"]["id"]] = update.callback_query.data
 
