@@ -1,8 +1,13 @@
 from datetime import datetime
 from io import BytesIO
 
+from PyPDF2 import PdfFileReader, PdfFileWriter
+from PyPDF2.pdf import PageObject
 from qrcode import make
-from telegram import Update
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.utils import ImageReader
+from reportlab.pdfgen import canvas
+from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CallbackContext
 
 from main import reasons, database
@@ -22,21 +27,77 @@ local = {
 
 
 def create(update: Update, context: CallbackContext):
-    reason = map(lambda r: local[r], reasons[update.effective_chat.id][update["_effective_user"]["id"]])
+    reason = reasons[update.effective_chat.id][update["_effective_user"]["id"]]
     del reasons[update.effective_chat.id][update["_effective_user"]["id"]]
-    date = datetime.now().strftime('%d/%m/%Y a %Hh%M')
+    date = datetime.now()
+    first_name = database[update['_effective_user']['id']]['last_name']
+    last_name = database[update['_effective_user']['id']]['first_name']
+    birth_date = database[update['_effective_user']['id']]['birth_date']
+    birth_city = database[update['_effective_user']['id']]['birth_city']
+    address = database[update['_effective_user']['id']]['address']
 
-    img = make(f"Cree le: {date};\n"
-               f"Nom: {database[update['_effective_user']['id']]['last_name']};\n"
-               f"Prenom: {database[update['_effective_user']['id']]['first_name']};\n"
-               f"Naissance: {database[update['_effective_user']['id']]['birth_date']} a "
-               f"{database[update['_effective_user']['id']]['birth_city']};\n"
-               f"Adresse: {database[update['_effective_user']['id']]['address']};\n"
-               f"Sortie: {date}\n"
-               f"Motifs: {', '.join(reason)};")
+    img = make(f"Cree le: {date.strftime('%d/%m/%Y a %Hh%M')};\n"
+               f"Nom: {first_name};\n"
+               f"Prenom: {last_name};\n"
+               f"Naissance: {birth_date} a "
+               f"{birth_city};\n"
+               f"Adresse: {address};\n"
+               f"Sortie: {date.strftime('%d/%m/%Y a %Hh%M')}\n"
+               f"Motifs: {', '.join(map(lambda r: local[r], reason))};")
     photo = BytesIO()
     photo.name = "QRCode.jpeg"
     img.save(photo, "JPEG")
     photo.seek(0)
     context.bot.send_photo(chat_id=update.effective_chat.id, photo=photo)
 
+    packet = BytesIO()
+    can = canvas.Canvas(packet, pagesize=letter)
+    can.setFont("Helvetica", 11)
+    can.drawString(119, 696, f"{first_name} {last_name}")
+    can.drawString(119, 674, birth_date)
+    can.drawString(297, 674, birth_city)
+    can.drawString(133, 652, address)
+    can.setFontSize(18)
+    for r in reason:
+        y = 0
+        if r == "work":
+            y = 578
+        elif r == "shopping":
+            y = 533
+        elif r == "health":
+            y = 477
+        elif r == "family":
+            y = 435
+        elif r == "handicap":
+            y = 396
+        elif r == "sport_animal":
+            y = 358
+        elif r == "injunction":
+            y = 295
+        elif r == "missions":
+            y = 255
+        elif r == "children":
+            y = 211
+        can.drawString(78, y, "x")
+    can.setFontSize(11)
+    can.drawString(105, 177, address)  # ToDo: City only !
+    can.drawString(91, 153, date.strftime("%d/%m/%Y"))
+    can.drawString(264, 153, date.strftime("%Hh%M"))
+    existing_pdf = PdfFileReader(open("certificate.pdf", "rb"))
+    photo.seek(0)
+    can.drawImage(ImageReader(photo), existing_pdf.getPage(0).mediaBox[2] - 156, 100, 92, 92)
+    can.save()
+
+    packet.seek(0)
+    new_pdf = PdfFileReader(packet)
+    output = PdfFileWriter()
+    page = existing_pdf.getPage(0)
+    page.mergePage(new_pdf.getPage(0))
+    output.addPage(page)
+    output_stream = BytesIO()
+    output_stream.name = "Exit certificate.pdf"
+    output.write(output_stream)
+    output_stream.seek(0)
+    context.bot.send_document(chat_id=update.effective_chat.id, document=output_stream,
+                              reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Home", callback_data="home")],
+                                                                 [InlineKeyboardButton("New", callback_data="new")]]))
