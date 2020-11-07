@@ -1,11 +1,14 @@
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, ParseMode
 from telegram.ext import CallbackContext
 
-from main import database, reasons
+import db
+from main import reasons
 
 
 def new(update: Update, context: CallbackContext):
-    if update['_effective_user']['id'] not in database or not all(database[update['_effective_user']['id']].values()):
+    s = db.Session()
+    u = s.query(db.User).get(update["_effective_user"]["id"])
+    if not u or not all([u.first_name, u.last_name, u.birth_date, u.birth_city, u.address]):
         context.bot.send_message(chat_id=update.effective_chat.id, text="You have no data saved !",
                                  reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Set data",
                                                                                           callback_data="data")],

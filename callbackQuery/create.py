@@ -10,7 +10,8 @@ from reportlab.pdfgen import canvas
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CallbackContext
 
-from main import reasons, database
+import db
+from main import reasons
 
 local = {
     "work": "travail",
@@ -30,11 +31,14 @@ def create(update: Update, context: CallbackContext):
     reason = reasons[update.effective_chat.id][update["_effective_user"]["id"]]
     del reasons[update.effective_chat.id][update["_effective_user"]["id"]]
     date = datetime.now()
-    first_name = database[update['_effective_user']['id']]['first_name']
-    last_name = database[update['_effective_user']['id']]['last_name']
-    birth_date = database[update['_effective_user']['id']]['birth_date']
-    birth_city = database[update['_effective_user']['id']]['birth_city']
-    address = address_re.fullmatch(database[update['_effective_user']['id']]['address']).groups()
+    s = db.Session()
+    u = s.query(db.User).get(update["_effective_user"]["id"])
+    s.close()
+    first_name = u.first_name
+    last_name = u.last_name
+    birth_date = u.birth_date
+    birth_city = u.birth_city
+    address = address_re.fullmatch(u.address).groups()
 
     img = make(f"Cree le: {date.strftime('%d/%m/%Y a %Hh%M')};\n"
                f"Nom: {first_name};\n"
@@ -54,7 +58,7 @@ def create(update: Update, context: CallbackContext):
     can = canvas.Canvas(packet, pagesize=letter)
     can.setFont("Helvetica", 11)
     can.drawString(119, 696, f"{first_name} {last_name}")
-    can.drawString(119, 674, birth_date)
+    can.drawString(119, 674, birth_date.strftime("%d/%m/%Y"))
     can.drawString(297, 674, birth_city)
     can.drawString(133, 652, f"{address[0]} {address[1]} {address[2]}")
     can.setFontSize(18)

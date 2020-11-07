@@ -133,3 +133,6 @@ dmypy.json
 
 # Config file
 config.json
+
+# db
+*.db

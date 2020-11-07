@@ -1,3 +1,4 @@
 {
-  "bot_token": "SUPER_SECRET_TOKEN"
+  "bot_token": "SUPER_SECRET_TOKEN",
+  "db": "postgresql://usr:pass@localhost:5432/sqlalchemy"
 }

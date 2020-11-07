@@ -4,9 +4,10 @@ from datetime import datetime
 from telegram import Update, ParseMode
 from telegram.ext import CallbackContext
 
+import db
 from callbackQuery.create import address_re
 from callbackQuery.data import data
-from main import local, messages, database
+from main import local, messages
 
 rex = {
     "first_name": re.compile(r"^([a-zA-Z]| )+$"),
@@ -33,6 +34,14 @@ def edit(update: Update, context: CallbackContext, data_edit: str):
         context.bot.send_message(chat_id=update.effective_chat.id, text=f"Invalid value for `{local[name]}` \!",
                                  parse_mode=ParseMode.MARKDOWN_V2)
     else:
+        s = db.Session()
+        u = s.query(db.User).get(update["_effective_user"]["id"])
         del messages[update.effective_chat.id][update["_effective_user"]["id"]]
-        database[update["_effective_user"]["id"]][name] = update.message.text
+        if name == "birth_date":
+            setattr(u, name, datetime.strptime(update.message.text, "%d/%m/%Y").date())
+        else:
+            setattr(u, name, update.message.text)
+        s.add(u)
+        s.commit()
+        s.close()
         data(update, context)

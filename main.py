@@ -8,7 +8,6 @@ local = {"first_name": "Firstname",
          "birth_date": "Birth date",
          "birth_city": "Birth city",
          "address": "Address"}
-database = {}
 messages = {}
 reasons = {}
 
