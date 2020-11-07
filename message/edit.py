@@ -4,15 +4,16 @@ from datetime import datetime
 from telegram import Update, ParseMode
 from telegram.ext import CallbackContext
 
+from callbackQuery.create import address_re
 from callbackQuery.data import data
 from main import local, messages, database
 
 rex = {
     "first_name": re.compile(r"^([a-zA-Z]| )+$"),
     "last_name": re.compile(r"^([a-zA-Z]| )+$"),
-    "birth_date": re.compile(r"[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}"),
+    "birth_date": re.compile(r"^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}$"),
     "birth_city": re.compile(r"^[a-zA-Z]+(?:[\s-][a-zA-Z]+)*$"),
-    "address": re.compile(r"^.*$")
+    "address": address_re
 }
 
 

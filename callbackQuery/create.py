@@ -1,8 +1,8 @@
 from datetime import datetime
 from io import BytesIO
+from re import compile
 
 from PyPDF2 import PdfFileReader, PdfFileWriter
-from PyPDF2.pdf import PageObject
 from qrcode import make
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.utils import ImageReader
@@ -11,7 +11,6 @@ from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CallbackContext
 
 from main import reasons, database
-
 
 local = {
     "work": "travail",
@@ -24,24 +23,25 @@ local = {
     "missions": "missions",
     "children": "enfants"
 }
+address_re = compile(r"^(.*),? ([0-9]{5}) ([a-zA-Z]+(?:[\s-][a-zA-Z]+)*)$")
 
 
 def create(update: Update, context: CallbackContext):
     reason = reasons[update.effective_chat.id][update["_effective_user"]["id"]]
     del reasons[update.effective_chat.id][update["_effective_user"]["id"]]
     date = datetime.now()
-    first_name = database[update['_effective_user']['id']]['last_name']
-    last_name = database[update['_effective_user']['id']]['first_name']
+    first_name = database[update['_effective_user']['id']]['first_name']
+    last_name = database[update['_effective_user']['id']]['last_name']
     birth_date = database[update['_effective_user']['id']]['birth_date']
     birth_city = database[update['_effective_user']['id']]['birth_city']
-    address = database[update['_effective_user']['id']]['address']
+    address = address_re.fullmatch(database[update['_effective_user']['id']]['address']).groups()
 
     img = make(f"Cree le: {date.strftime('%d/%m/%Y a %Hh%M')};\n"
                f"Nom: {first_name};\n"
                f"Prenom: {last_name};\n"
                f"Naissance: {birth_date} a "
                f"{birth_city};\n"
-               f"Adresse: {address};\n"
+               f"Adresse: {address[0]} {address[1]} {address[2]};\n"
                f"Sortie: {date.strftime('%d/%m/%Y a %Hh%M')}\n"
                f"Motifs: {', '.join(map(lambda r: local[r], reason))};")
     photo = BytesIO()
@@ -56,7 +56,7 @@ def create(update: Update, context: CallbackContext):
     can.drawString(119, 696, f"{first_name} {last_name}")
     can.drawString(119, 674, birth_date)
     can.drawString(297, 674, birth_city)
-    can.drawString(133, 652, address)
+    can.drawString(133, 652, f"{address[0]} {address[1]} {address[2]}")
     can.setFontSize(18)
     for r in reason:
         y = 0
@@ -80,7 +80,7 @@ def create(update: Update, context: CallbackContext):
             y = 211
         can.drawString(78, y, "x")
     can.setFontSize(11)
-    can.drawString(105, 177, address)  # ToDo: City only !
+    can.drawString(105, 177, address[2])
     can.drawString(91, 153, date.strftime("%d/%m/%Y"))
     can.drawString(264, 153, date.strftime("%Hh%M"))
     existing_pdf = PdfFileReader(open("certificate.pdf", "rb"))
